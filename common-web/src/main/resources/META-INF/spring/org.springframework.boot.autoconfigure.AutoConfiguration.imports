@@ -1,0 +1,2 @@
+com.kaveks.commonweb.config.CommonWebAutoConfiguration
+com.kaveks.commonweb.security.config.CommonSecurityAutoConfiguration
