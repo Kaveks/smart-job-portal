@@ -2,7 +2,7 @@
 package com.kaveks.commonweb.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kaveks.commonweb.security.annotation.RequireRoles;
+import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.commonweb.security.authorization.RoleAuthorizationManager;
 import com.kaveks.commonweb.security.exception.JwtAccessDeniedHandler;
 import com.kaveks.commonweb.security.exception.JwtAuthenticationEntryPoint;
@@ -86,13 +86,13 @@ public class CommonSecurityAutoConfiguration {
 
         ComposablePointcut pointcut = new ComposablePointcut(
                 AnnotationMatchingPointcut.forClassAnnotation(
-                        RequireRoles.class
+                        AllowedRoles.class
                 )
         );
 
         pointcut.union(
                 AnnotationMatchingPointcut.forMethodAnnotation(
-                        RequireRoles.class
+                        AllowedRoles.class
                 )
         );
 

@@ -20,6 +20,11 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  #jackson serializer
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
   # JPA / Hibernate Configuration
   jpa:
     hibernate:

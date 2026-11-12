@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public class GlobalExceptionHandler {
 
     private static final URI PROBLEM_TYPE = URI.create("about:blank");
 
-    // Handles invalid request body validation
+    // Handles DTO field validation failures
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(
             MethodArgumentNotValidException exception,
@@ -93,59 +94,121 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, problem);
     }
 
-    // Handles malformed JSON or unreadable request bodies
+    // Handles malformed JSON, unsupported fields and invalid JSON values
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ProblemDetail> handleMessageNotReadable(
             HttpMessageNotReadableException exception,
             HttpServletRequest request) {
 
-        String detail =
-                "The request body is missing, malformed, or contains invalid data.";
-
         Throwable cause = exception;
 
         while (cause != null) {
 
-            if (cause instanceof InvalidFormatException invalidFormatException) {
+            // Unsupported JSON property
+            if (cause instanceof UnrecognizedPropertyException unknownProperty) {
 
-                Class<?> targetType = invalidFormatException.getTargetType();
+                String field = unknownProperty.getPropertyName();
+
+                return buildInvalidBodyResponse(
+                        request,
+                        field,
+                        "The field '" + field
+                                + "' is not supported in this request."
+                );
+            }
+
+            // Invalid JSON value, including invalid enum values
+            if (cause instanceof InvalidFormatException invalidFormat) {
+
+                String field = getFieldPath(invalidFormat);
+
+                Class<?> targetType = invalidFormat.getTargetType();
+
+                String detail;
 
                 if (targetType != null && targetType.isEnum()) {
-
-                    String field = invalidFormatException.getPath()
-                            .stream()
-                            .map(JacksonException.Reference::getPropertyName)
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.joining("."));
 
                     String acceptedValues = Arrays.stream(targetType.getEnumConstants())
                             .map(Object::toString)
                             .collect(Collectors.joining(", "));
 
                     detail = String.format(
-                            "Invalid value '%s' for field '%s'. Accepted values are: %s.",
-                            invalidFormatException.getValue(),
-                            field.isBlank() ? "unknown" : field,
+                            "Invalid value for field '%s'. Accepted values are: %s.",
+                            field,
                             acceptedValues
                     );
 
-                    break;
+                } else {
+
+                    String expectedType = targetType == null
+                            ? "the expected data type"
+                            : targetType.getSimpleName();
+
+                    detail = String.format(
+                            "Invalid value for field '%s'. Expected type: %s.",
+                            field,
+                            expectedType
+                    );
                 }
+
+                return buildInvalidBodyResponse(
+                        request,
+                        field,
+                        detail
+                );
             }
 
             cause = cause.getCause();
         }
 
+        // Malformed JSON, missing body or another unreadable request
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 createProblem(
                         HttpStatus.BAD_REQUEST,
                         "Invalid request body",
-                        detail,
+                        "The request body is missing, malformed, or contains invalid data.",
                         request
                 )
         );
     }
+
+    // Extracts the nested JSON field path
+    private String getFieldPath(InvalidFormatException exception) {
+
+        String field = exception.getPath()
+                .stream()
+                .map(JacksonException.Reference::getPropertyName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining("."));
+
+        return field.isBlank() ? "unknown" : field;
+    }
+
+    // Builds a field-specific invalid request response
+    private ResponseEntity<ProblemDetail> buildInvalidBodyResponse(
+            HttpServletRequest request,
+            String field,
+            String message) {
+
+        ProblemDetail problem = createProblem(
+                HttpStatus.BAD_REQUEST,
+                "Validation failed",
+                "One or more request fields are invalid.",
+                request
+        );
+
+        problem.setProperty(
+                "errors",
+                List.of(Map.of(
+                        "field", field,
+                        "message", message
+                ))
+        );
+
+        return buildResponse(HttpStatus.BAD_REQUEST, problem);
+    }
+
 
     // Handles method-level authorization failures
     @ExceptionHandler(AccessDeniedException.class)
@@ -164,8 +227,8 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN,
                 createProblem(
                         HttpStatus.FORBIDDEN,
-                        "Access denied",
-                        "You do not have permission to access this resource.",
+                        "You are not authorised!",
+                        exception.getMessage(),
                         request
                 )
         );
