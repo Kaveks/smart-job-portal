@@ -11,6 +11,7 @@ import com.kaveks.userservice.repository.UserRepository;
 import com.kaveks.userservice.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,7 +78,11 @@ public class AuthService implements com.kaveks.userservice.service.AuthService {
                         HttpStatus.UNAUTHORIZED,
                         "No account found with this email address"
                 ));
-
+        if (user.getStatus()==UserStatus.SUSPENDED) {
+            throw new AccessDeniedException(
+                    user.getFirstName() + " is already suspended"
+            );
+        }
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,

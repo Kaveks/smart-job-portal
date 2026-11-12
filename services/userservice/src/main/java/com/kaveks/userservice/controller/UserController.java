@@ -1,12 +1,16 @@
 package com.kaveks.userservice.controller;
 
+import com.kaveks.commonlib.domain.UserRole;
 import com.kaveks.commonlib.dto.user.UserResponse;
+import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.userservice.payload.UpdateRequest;
 import com.kaveks.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -21,8 +25,10 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email){
+    @GetMapping(params = "email")
+    public ResponseEntity<UserResponse> getUserByEmail(
+            @RequestParam String email
+    ) {
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
@@ -34,13 +40,22 @@ public class UserController {
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateRequest request
+            @Valid @RequestBody UpdateRequest request,
+            Authentication authentication
     ){
+        String authenticatedUserId = authentication.getName();
+
+        if (!String.valueOf(id).equals(authenticatedUserId)) {
+            throw new AccessDeniedException(
+                    "You can only update your own profile."
+            );
+        }
+
         return ResponseEntity.ok(userService.updateProfile(id,request));
     }
-
     // Suspend user
     @PatchMapping("/{id}/suspend")
+    @AllowedRoles({UserRole.ROLE_ADMIN})
     public ResponseEntity<String> suspendUser(
             @PathVariable Long id
     ) {
@@ -49,6 +64,7 @@ public class UserController {
 
     // Activate user
     @PatchMapping("/{id}/activate")
+    @AllowedRoles({UserRole.ROLE_ADMIN})
     public ResponseEntity<String> activateUser(
             @PathVariable Long id
     ) {

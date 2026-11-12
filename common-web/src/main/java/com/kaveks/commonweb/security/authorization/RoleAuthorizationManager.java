@@ -1,7 +1,7 @@
 
 package com.kaveks.commonweb.security.authorization;
 
-import com.kaveks.commonweb.security.annotation.RequireRoles;
+import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.commonlib.domain.UserRole;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.support.AopUtils;
@@ -32,7 +32,7 @@ public class RoleAuthorizationManager
         }
 
         assert invocation != null;
-        RequireRoles requireRoles = findRequireRoles(invocation);
+        AllowedRoles requireRoles = findRequireRoles(invocation);
 
         // Deny access if no role annotation is found.
         if (requireRoles == null || requireRoles.value().length == 0) {
@@ -53,7 +53,7 @@ public class RoleAuthorizationManager
         return new AuthorizationDecision(hasRequiredRole);
     }
 
-    private RequireRoles findRequireRoles(MethodInvocation invocation) {
+    private AllowedRoles findRequireRoles(MethodInvocation invocation) {
 
         Object aThis = invocation.getThis();
         assert aThis != null;
@@ -65,10 +65,10 @@ public class RoleAuthorizationManager
         );
 
         // Method-level annotation takes precedence.
-        RequireRoles methodAnnotation =
+        AllowedRoles methodAnnotation =
                 AnnotatedElementUtils.findMergedAnnotation(
                         specificMethod,
-                        RequireRoles.class
+                        AllowedRoles.class
                 );
 
         if (methodAnnotation != null) {
@@ -78,7 +78,7 @@ public class RoleAuthorizationManager
         // Fall back to the class-level annotation.
         return AnnotatedElementUtils.findMergedAnnotation(
                 targetClass,
-                RequireRoles.class
+                AllowedRoles.class
         );
     }
 }

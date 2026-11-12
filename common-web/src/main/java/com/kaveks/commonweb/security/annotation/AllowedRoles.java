@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
         ElementType.TYPE
 })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RequireRoles {
+public @interface AllowedRoles {
 
     UserRole[] value();
 }
