@@ -10,14 +10,14 @@
 	<parent>
 		<groupId>com.kaveks</groupId>
 		<artifactId>services</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<version>4.1.2</version>
+		<relativePath>../pom.xml</relativePath> <!-- lookup parent from repository -->
 	</parent>
 
 	<!-- User Service -->
 	<artifactId>userservice</artifactId>
 
-	<name>user-service</name>
+	<name>userservice</name>
 	<description>User management microservice</description>
 
 	<dependencies>
@@ -34,6 +34,10 @@
 		<dependency>
 			<groupId>io.github.cdimascio</groupId>
 			<artifactId>dotenv-java</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt</artifactId>
 		</dependency>
 
 		<!-- Spring Data JPA -->

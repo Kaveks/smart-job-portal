@@ -17,7 +17,6 @@
     <!-- Project coordinates -->
     <groupId>com.kaveks</groupId>
     <artifactId>smart-job-portal</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>smart-job-portal</name>

@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class UserserviceApplication {
+public class UserServiceApplication {
 
 	public static void main(String[] args) {
 
@@ -28,7 +28,7 @@ public class UserserviceApplication {
 		setPropertyIfMissing("CONFIG_SERVER_URL", dotenv.get("CONFIG_SERVER_URL"));
 		setPropertyIfMissing("EUREKA_SERVER_URL", dotenv.get("EUREKA_SERVER_URL"));
 
-		SpringApplication.run(UserserviceApplication.class, args);
+		SpringApplication.run(UserServiceApplication.class, args);
 	}
 
 	private static void setPropertyIfMissing(String key, String value) {
