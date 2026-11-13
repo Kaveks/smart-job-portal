@@ -19,10 +19,10 @@
 			<groupId>com.kaveks</groupId>
 			<artifactId>common-lib</artifactId>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>com.kaveks</groupId>-->
-<!--			<artifactId>common-web</artifactId>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>com.kaveks</groupId>
+			<artifactId>common-web</artifactId>
+		</dependency>
 		<!-- dotenv -->
 		<dependency>
 			<groupId>io.github.cdimascio</groupId>
