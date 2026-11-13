@@ -83,6 +83,12 @@ public class AuthService implements com.kaveks.userservice.service.AuthService {
                     user.getFirstName() + " is already suspended"
             );
         }
+        if (user.getStatus()==UserStatus.DELETED){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "not allowed to login"
+            );
+        }
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
