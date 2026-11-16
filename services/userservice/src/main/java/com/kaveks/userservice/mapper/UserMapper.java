@@ -2,7 +2,6 @@ package com.kaveks.userservice.mapper;
 
 import com.kaveks.commonlib.dto.user.UserResponse;
 import com.kaveks.userservice.model.User;
-
 public class UserMapper {
     public static UserResponse toUserResponse(User user){
         UserResponse userResponse= new UserResponse();
