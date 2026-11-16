@@ -17,7 +17,7 @@ public interface CompanyService {
     // Used for internal service-to-service communication
     CompanyResponse getCompanyByIdInternal(Long id);
 
-    CompanyResponse getMyCompany(Long ownerId);
+    List<CompanyResponse> getMyCompanies(Long ownerId);;
 
     List<CompanyResponse> companyList(
             CompanyType companyType,
