@@ -8,6 +8,7 @@ import com.kaveks.userservice.payload.AuthResponse;
 import com.kaveks.userservice.payload.LoginRequest;
 import com.kaveks.userservice.payload.SignUpRequest;
 import com.kaveks.userservice.repository.UserRepository;
+import com.kaveks.userservice.service.AuthService;
 import com.kaveks.userservice.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements com.kaveks.userservice.service.AuthService {
+public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

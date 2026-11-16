@@ -6,10 +6,11 @@ import com.kaveks.userservice.mapper.UserMapper;
 import com.kaveks.userservice.model.User;
 import com.kaveks.userservice.payload.UpdateRequest;
 import com.kaveks.userservice.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import com.kaveks.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import static com.kaveks.userservice.mapper.UserMapper.toUserResponse;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements com.kaveks.userservice.service.UserService {
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     @Override
     @Transactional
