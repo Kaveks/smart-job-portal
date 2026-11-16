@@ -1,8 +1,8 @@
 package com.kaveks.userservice.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kaveks.commonlib.domain.UserRole;
-import com.kaveks.commonlib.domain.UserStatus;
+import com.kaveks.commonlib.domain.user.UserRole;
+import com.kaveks.commonlib.domain.user.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,7 +1,7 @@
 package com.kaveks.userservice.service.impl;
 
-import com.kaveks.commonlib.domain.UserRole;
-import com.kaveks.commonlib.domain.UserStatus;
+import com.kaveks.commonlib.domain.user.UserRole;
+import com.kaveks.commonlib.domain.user.UserStatus;
 import com.kaveks.userservice.mapper.UserMapper;
 import com.kaveks.userservice.model.User;
 import com.kaveks.userservice.payload.AuthResponse;
@@ -81,6 +81,12 @@ public class AuthService implements com.kaveks.userservice.service.AuthService {
         if (user.getStatus()==UserStatus.SUSPENDED) {
             throw new AccessDeniedException(
                     user.getFirstName() + " is already suspended"
+            );
+        }
+        if (user.getStatus()==UserStatus.DELETED){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "not allowed to login"
             );
         }
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {

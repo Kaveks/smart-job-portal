@@ -1,6 +1,6 @@
 package com.kaveks.userservice.payload;
 
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

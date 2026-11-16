@@ -1,7 +1,7 @@
 package com.kaveks.commonweb.security.annotation;
 
 
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

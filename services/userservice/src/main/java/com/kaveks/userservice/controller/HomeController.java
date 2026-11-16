@@ -1,7 +1,7 @@
 package com.kaveks.userservice.controller;
 
 
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

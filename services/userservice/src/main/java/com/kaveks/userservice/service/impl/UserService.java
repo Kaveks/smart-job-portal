@@ -1,6 +1,6 @@
 package com.kaveks.userservice.service.impl;
 
-import com.kaveks.commonlib.domain.UserStatus;
+import com.kaveks.commonlib.domain.user.UserStatus;
 import com.kaveks.commonlib.dto.user.UserResponse;
 import com.kaveks.userservice.mapper.UserMapper;
 import com.kaveks.userservice.model.User;
@@ -52,7 +52,9 @@ public class UserService implements com.kaveks.userservice.service.UserService {
     @Override
     @Transactional
     public List<UserResponse> userList() {
-        return userRepository.findAll()
+        return userRepository.findAllByStatusNotIn(
+                        List.of(UserStatus.DELETED, UserStatus.SUSPENDED)
+                )
                 .stream()
                 .map(UserMapper::toUserResponse)
                 .toList();
@@ -81,6 +83,19 @@ public class UserService implements com.kaveks.userservice.service.UserService {
     @Transactional
     public String suspendUser(Long id) {
         User user =findUserById(id);
+        if(user.getStatus()==UserStatus.SUSPENDED){
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "user is already suspended."
+            );
+        }
+        if(user.getStatus()==UserStatus.DELETED){
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "user not available."
+            );
+        }
+
         user.setStatus(UserStatus.SUSPENDED);
         user.setSuspendedAt(LocalDateTime.now());
         User updatedUser =userRepository.save(user);
@@ -90,18 +105,30 @@ public class UserService implements com.kaveks.userservice.service.UserService {
     @Override
     public String activateUser(Long id) {
         User user =findUserById(id);
+        if(user.getStatus()==UserStatus.DELETED){
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "user not available."
+            );
+        }
         user.setStatus(UserStatus.ACTIVE);
         user.setSuspendedAt(null);
         User updatedUser =userRepository.save(user);
-        return "user "+ updatedUser.getFirstName() + " activated";
+        return "user "+ updatedUser.getFirstName() + " activated.";
     }
 
     @Override
     public String deleteUser(Long id) {
         User user =findUserById(id);
+        if(user.getStatus()==UserStatus.DELETED){
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "user not available."
+            );
+        }
         user.setStatus(UserStatus.DELETED);
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
-        return "user deleted";
+        return "user deleted.";
     }
 }

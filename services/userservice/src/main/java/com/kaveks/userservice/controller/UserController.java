@@ -1,6 +1,6 @@
 package com.kaveks.userservice.controller;
 
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 import com.kaveks.commonlib.dto.user.UserResponse;
 import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.userservice.payload.UpdateRequest;

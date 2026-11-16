@@ -1,7 +1,7 @@
 
 package com.kaveks.commonweb.security.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.commonweb.security.authorization.RoleAuthorizationManager;
 import com.kaveks.commonweb.security.exception.JwtAccessDeniedHandler;
@@ -26,6 +26,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import tools.jackson.databind.ObjectMapper;
 
 @AutoConfiguration
 @ConditionalOnClass(SecurityFilterChain.class)
