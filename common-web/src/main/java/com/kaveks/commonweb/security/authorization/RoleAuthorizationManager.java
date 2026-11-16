@@ -2,7 +2,7 @@
 package com.kaveks.commonweb.security.authorization;
 
 import com.kaveks.commonweb.security.annotation.AllowedRoles;
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
