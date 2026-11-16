@@ -1,4 +1,4 @@
-package com.kaveks.commonlib.domain;
+package com.kaveks.commonlib.domain.company;
 
 public enum CompanyType {
     STARTUP,
