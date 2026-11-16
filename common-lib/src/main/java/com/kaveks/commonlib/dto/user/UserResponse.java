@@ -1,7 +1,7 @@
 package com.kaveks.commonlib.dto.user;
 
-import com.kaveks.commonlib.domain.UserRole;
-import com.kaveks.commonlib.domain.UserStatus;
+import com.kaveks.commonlib.domain.user.UserRole;
+import com.kaveks.commonlib.domain.user.UserStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
