@@ -1,7 +1,7 @@
 
 package com.kaveks.userservice.service;
 
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 import com.kaveks.userservice.config.JwtProvider;
 import org.springframework.stereotype.Service;
 

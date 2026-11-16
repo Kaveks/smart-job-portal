@@ -1,7 +1,7 @@
 
 package com.kaveks.userservice.config;
 
-import com.kaveks.commonlib.domain.UserRole;
+import com.kaveks.commonlib.domain.user.UserRole;
 import io.jsonwebtoken.Jwts;
 
 import java.math.BigInteger;

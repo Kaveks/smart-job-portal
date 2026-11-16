@@ -1,6 +1,6 @@
 package com.kaveks.userservice.service.impl;
 
-import com.kaveks.commonlib.domain.UserStatus;
+import com.kaveks.commonlib.domain.user.UserStatus;
 import com.kaveks.commonlib.dto.user.UserResponse;
 import com.kaveks.userservice.mapper.UserMapper;
 import com.kaveks.userservice.model.User;
