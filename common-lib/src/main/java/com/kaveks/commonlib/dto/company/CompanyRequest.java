@@ -1,45 +1,60 @@
-package com.kaveks.commonlib.dto;
+package com.kaveks.commonlib.dto.company;
 
-import com.kaveks.commonlib.domain.CompanySize;
-import com.kaveks.commonlib.domain.CompanyStatus;
-import com.kaveks.commonlib.domain.CompanyType;
-import com.kaveks.commonlib.domain.IndustryType;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import com.kaveks.commonlib.domain.company.CompanySize;
+import com.kaveks.commonlib.domain.company.CompanyType;
+import com.kaveks.commonlib.domain.company.IndustryType;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
 public class CompanyRequest {
-    @NotBlank(message = "name is required")
+
+    @NotBlank(message = "Name is required")
+    @Size(max = 150)
     private String name;
-    @Email(message = "provide a valid email")
+
+    @Email(message = "Provide a valid email")
     private String email;
+
     private String slug;
+
+    @Size(max = 200)
     private String tagLine;
+
+    @Size(max = 500)
     private String description;
-    @Pattern(regexp = "^(https?://).*",message = "provide a valid website url")
+
+    @Pattern(
+            regexp = "^https?://.+",
+            message = "Provide a valid website URL"
+    )
     private String website;
+
     private String logoUrl;
+
     private String coverImageUrl;
+
     private String phone;
-    private Date dateFounded;
-    @NotBlank(message = "companySize is required")
+
+    @PastOrPresent(message = "Founding date cannot be in the future")
+    private LocalDate dateFounded;
+
+    @NotNull(message = "Company size is required")
     private CompanySize companySize;
 
-    @NotBlank(message = "companyType is required")
+    @NotNull(message = "Company type is required")
     private CompanyType companyType;
 
-    @NotBlank(message = "industryType is required")
+    @NotNull(message = "Industry type is required")
     private IndustryType industryType;
 
-    @NotBlank(message = "regNumber is required")
+    @NotBlank(message = "Registration number is required")
     private String regNumber;
-    private Long ownerId;
-    private List<SocialLinksResponse> socialLinks;
 
-
+    @Valid
+    private List<SocialLinksRequest> socialLinks;
 }

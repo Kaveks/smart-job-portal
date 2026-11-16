@@ -1,6 +1,6 @@
-package com.kaveks.commonlib.dto;
+package com.kaveks.commonlib.dto.company;
 
-import com.kaveks.commonlib.domain.SocialPlatform;
+import com.kaveks.commonlib.domain.company.SocialPlatform;
 import lombok.*;
 
 @Getter
