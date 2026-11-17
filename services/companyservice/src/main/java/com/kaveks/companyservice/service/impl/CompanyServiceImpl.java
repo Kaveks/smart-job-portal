@@ -5,6 +5,7 @@ import com.kaveks.commonlib.domain.company.CompanyType;
 import com.kaveks.commonlib.domain.company.IndustryType;
 import com.kaveks.commonlib.dto.company.CompanyRequest;
 import com.kaveks.commonlib.dto.company.CompanyResponse;
+import com.kaveks.commonlib.dto.company.CompanyUpdateRequest;
 import com.kaveks.companyservice.mapper.CompanyMapper;
 import com.kaveks.companyservice.model.Company;
 import com.kaveks.companyservice.repository.CompanyRepository;
@@ -58,7 +59,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyResponse updateCompany(
             Long id,
             Long ownerId,
-            CompanyRequest request
+            CompanyUpdateRequest request
     ) {
         Company company = findCompanyById(id);
 
@@ -71,14 +72,17 @@ public class CompanyServiceImpl implements CompanyService {
             );
         }
 
-        boolean nameChanged = !company.getName().equals(request.getName());
+        boolean nameChanged = request.getName() != null
+                && !company.getName().equals(request.getName());
 
-        validateRegistrationNumber(request.getRegNumber(), id);
+        if (request.getRegNumber() != null) {
+            validateRegistrationNumber(request.getRegNumber(), id);
+        }
 
-        companyMapper.toCompany(request, company);
+        companyMapper.updateCompany(request, company);
 
         if (nameChanged) {
-            company.setSlug(generateUniqueSlug(request.getName()));
+            company.setSlug(generateUniqueSlug(company.getName()));
         }
 
         Company updatedCompany = companyRepository.save(company);

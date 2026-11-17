@@ -6,6 +6,7 @@ import com.kaveks.commonlib.domain.company.IndustryType;
 import com.kaveks.commonlib.domain.user.UserRole;
 import com.kaveks.commonlib.dto.company.CompanyRequest;
 import com.kaveks.commonlib.dto.company.CompanyResponse;
+import com.kaveks.commonlib.dto.company.CompanyUpdateRequest;
 import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.companyservice.service.CompanyService;
 
@@ -72,7 +73,7 @@ public class CompanyController {
     @AllowedRoles({UserRole.ROLE_EMPLOYER})
     public ResponseEntity<CompanyResponse> updateCompany(
             @PathVariable Long id,
-            @Valid @RequestBody CompanyRequest request,
+            @Valid @RequestBody CompanyUpdateRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
         Long ownerId = getOwnerId(jwt);

@@ -2,6 +2,7 @@
 package com.kaveks.companyservice.mapper;
 
 import com.kaveks.commonlib.dto.company.CompanyRequest;
+import com.kaveks.commonlib.dto.company.CompanyUpdateRequest;
 import com.kaveks.commonlib.dto.company.CompanyResponse;
 import com.kaveks.commonlib.dto.company.SocialLinksRequest;
 import com.kaveks.commonlib.dto.company.SocialLinksResponse;
@@ -11,15 +12,36 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Component
 public class CompanyMapper {
 
-    // Entity mapping
+    // Creation mapping
     public void toCompany(
             CompanyRequest request,
+            Company company
+    ) {
+        company.setName(request.getName());
+        company.setTagLine(request.getTagLine());
+        company.setDescription(request.getDescription());
+        company.setWebsite(request.getWebsite());
+        company.setLogoUrl(request.getLogoUrl());
+        company.setCoverImageUrl(request.getCoverImageUrl());
+        company.setDateFounded(request.getDateFounded());
+        company.setPhone(request.getPhone());
+        company.setEmail(request.getEmail());
+        company.setCompanySize(request.getCompanySize());
+        company.setCompanyType(request.getCompanyType());
+        company.setIndustryType(request.getIndustryType());
+        company.setRegNumber(request.getRegNumber());
+
+        company.setSocialLinks(toSocialLinks(request.getSocialLinks()));
+    }
+
+    // Partial update mapping
+    public void updateCompany(
+            CompanyUpdateRequest request,
             Company company
     ) {
 
@@ -75,6 +97,7 @@ public class CompanyMapper {
             company.setRegNumber(request.getRegNumber());
         }
 
+        // Null preserves existing links; empty list clears them.
         if (request.getSocialLinks() != null) {
             company.setSocialLinks(toSocialLinks(request.getSocialLinks()));
         }
@@ -92,6 +115,7 @@ public class CompanyMapper {
 
         for (SocialLinksRequest request : requests) {
             SocialLinks socialLink = new SocialLinks();
+
             socialLink.setPlatform(request.getPlatform());
             socialLink.setUrl(request.getUrl());
 
@@ -128,19 +152,24 @@ public class CompanyMapper {
         response.setCreatedAt(company.getCreatedAt());
         response.setUpdatedAt(company.getUpdatedAt());
 
-        List<SocialLinksResponse> socialLinks =
-                company.getSocialLinks() == null
-                        ? Collections.emptyList()
-                        : company.getSocialLinks()
-                        .stream()
-                        .map(link -> SocialLinksResponse.builder()
-                                .platform(link.getPlatform())
-                                .url(link.getUrl())
-                                .build())
-                        .toList();
-
-        response.setSocialLinks(new ArrayList<>(socialLinks));
+        response.setSocialLinks(toSocialLinksResponse(company.getSocialLinks()));
 
         return response;
+    }
+
+    // Social links response mapping
+    private List<SocialLinksResponse> toSocialLinksResponse(
+            List<SocialLinks> socialLinks
+    ) {
+        if (socialLinks == null || socialLinks.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return socialLinks.stream()
+                .map(link -> SocialLinksResponse.builder()
+                        .platform(link.getPlatform())
+                        .url(link.getUrl())
+                        .build())
+                .toList();
     }
 }

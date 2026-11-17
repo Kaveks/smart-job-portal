@@ -5,6 +5,7 @@ import com.kaveks.commonlib.domain.company.CompanyType;
 import com.kaveks.commonlib.domain.company.IndustryType;
 import com.kaveks.commonlib.dto.company.CompanyRequest;
 import com.kaveks.commonlib.dto.company.CompanyResponse;
+import com.kaveks.commonlib.dto.company.CompanyUpdateRequest;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public interface CompanyService {
     CompanyResponse updateCompany(
             Long id,
             Long ownerId,
-            CompanyRequest request
+            CompanyUpdateRequest request
     );
 
     String verifyCompany(Long id);
