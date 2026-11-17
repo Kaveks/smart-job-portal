@@ -43,7 +43,7 @@ public class CompanyServiceImpl implements CompanyService {
         companyMapper.toCompany(request,company);
 
         company.setOwnerId(ownerId);
-        company.setSlug(generateUniqueSlug(request.getSlug(), request.getName()));
+        company.setSlug(generateUniqueSlug(request.getName()));
         company.setStatus(CompanyStatus.PENDING);
         company.setVerified(false);
         company.setActive(true);
@@ -52,6 +52,40 @@ public class CompanyServiceImpl implements CompanyService {
 
         return companyMapper.toCompanyResponse(savedCompany);
     }
+
+    @Override
+    @Transactional
+    public CompanyResponse updateCompany(
+            Long id,
+            Long ownerId,
+            CompanyRequest request
+    ) {
+        Company company = findCompanyById(id);
+
+        validateOwnership(company, ownerId);
+
+        if (!Boolean.TRUE.equals(company.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Company not found"
+            );
+        }
+
+        boolean nameChanged = !company.getName().equals(request.getName());
+
+        validateRegistrationNumber(request.getRegNumber(), id);
+
+        companyMapper.toCompany(request, company);
+
+        if (nameChanged) {
+            company.setSlug(generateUniqueSlug(request.getName()));
+        }
+
+        Company updatedCompany = companyRepository.save(company);
+
+        return companyMapper.toCompanyResponse(updatedCompany);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public CompanyResponse getCompanyById(Long id) {
@@ -143,36 +177,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .toList();
     }
 
-    @Override
-    @Transactional
-    public CompanyResponse updateCompany(Long id, Long ownerId, CompanyRequest request) {
-        Company company = findCompanyById(id);
-
-        validateOwnership(company, ownerId);
-
-        if (!Boolean.TRUE.equals(company.getActive())) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Company not found"
-            );
-        }
-
-        String requestedSlug = StringUtils.hasText(request.getSlug())
-                ? request.getSlug()
-                : company.getSlug();
-
-        String slug = slugify(requestedSlug);
-
-        validateSlug(slug, id);
-        validateRegistrationNumber(request.getRegNumber(), id);
-
-        companyMapper.toCompany(request, company);
-        company.setSlug(slug);
-
-        Company updatedCompany = companyRepository.save(company);
-
-        return companyMapper.toCompanyResponse(updatedCompany);
-    }
 
     @Override
     public String verifyCompany(Long id) {
@@ -237,26 +241,33 @@ public class CompanyServiceImpl implements CompanyService {
                 ));
     }
 
-    private String generateUniqueSlug(String requestSlug, String companyName){
-        String baseSlug=slugify(
-                StringUtils.hasText(requestSlug)? requestSlug : companyName
-        );
+    private String generateUniqueSlug(String companyName) {
+
+        String baseSlug = slugify(companyName);
+
         if (!StringUtils.hasText(baseSlug)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "A valid company name or slug is required"
+                    "A valid company name is required to generate a slug"
             );
         }
-        String slug=baseSlug;
-        int suffix=1;
-        while(companyRepository.existsBySlug(slug)){
+
+        String slug = baseSlug;
+        int suffix = 1;
+
+        while (companyRepository.existsBySlug(slug)) {
+
             String suffixText = "-" + suffix++;
+
             int maxBaseLength = 180 - suffixText.length();
 
-            slug=baseSlug.substring(0, Math.min(baseSlug.length(),maxBaseLength)) + suffixText;
+            slug = baseSlug.substring(
+                    0,
+                    Math.min(baseSlug.length(), maxBaseLength)
+            ) + suffixText;
         }
-        return slug;
 
+        return slug;
     }
     // Normalize slug
     private String slugify(String value) {

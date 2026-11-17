@@ -20,8 +20,6 @@ public class CompanyRequest {
     @Email(message = "Provide a valid email")
     private String email;
 
-    private String slug;
-
     @Size(max = 200)
     private String tagLine;
 
