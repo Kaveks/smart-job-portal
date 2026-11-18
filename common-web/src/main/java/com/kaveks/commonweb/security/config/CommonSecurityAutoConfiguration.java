@@ -6,7 +6,8 @@ import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.commonweb.security.authorization.RoleAuthorizationManager;
 import com.kaveks.commonweb.security.exception.JwtAccessDeniedHandler;
 import com.kaveks.commonweb.security.exception.JwtAuthenticationEntryPoint;
-
+import com.kaveks.commonweb.security.jwt.JjwtJwtDecoder;
+import com.kaveks.commonweb.security.jwt.RsaPublicKeyLoader;
 import org.springframework.aop.support.ComposablePointcut;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -28,9 +29,14 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import tools.jackson.databind.ObjectMapper;
 
+import java.security.interfaces.RSAPublicKey;
+
 @AutoConfiguration
 @ConditionalOnClass(SecurityFilterChain.class)
-@EnableConfigurationProperties(CommonSecurityProperties.class)
+@EnableConfigurationProperties({
+        CommonSecurityProperties.class,
+        JwtProperties.class
+})
 @EnableMethodSecurity
 public class CommonSecurityAutoConfiguration {
 
@@ -143,5 +149,35 @@ public class CommonSecurityAutoConfiguration {
                 );
 
         return http.build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RsaPublicKeyLoader.class)
+    public RsaPublicKeyLoader rsaPublicKeyLoader() {
+        return new RsaPublicKeyLoader();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(JwtDecoder.class)
+    public JwtDecoder jwtDecoder(
+            RsaPublicKeyLoader publicKeyLoader,
+            JwtProperties properties
+    ) {
+        try {
+            RSAPublicKey publicKey = publicKeyLoader.load(
+                    properties.getPublicKeyPath()
+            );
+
+            return new JjwtJwtDecoder(
+                    publicKey,
+                    properties.getIssuer()
+            );
+
+        } catch (Exception exception) {
+            throw new IllegalStateException(
+                    "Failed to initialize JWT decoder. Check the RSA public key configuration.",
+                    exception
+            );
+        }
     }
 }

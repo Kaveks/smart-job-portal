@@ -1,11 +1,9 @@
 
 package com.kaveks.userservice.config;
 
-import com.kaveks.commonweb.security.jwt.JjwtJwtDecoder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -49,18 +47,6 @@ public class JwtConfig {
                 jwtKeyPair,
                 issuer,
                 accessTokenTtl
-        );
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder(
-            RSAPublicKey jwtPublicKey,
-            @Value("${app.security.jwt.issuer}") String issuer
-    ) {
-
-        return new JjwtJwtDecoder(
-                jwtPublicKey,
-                issuer
         );
     }
 }
