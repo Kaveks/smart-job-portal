@@ -286,7 +286,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (!Objects.equals(company.getOwnerId(), ownerId)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "You are not authorized to manage this company"
+                    "You can only manage your own company"
             );
         }
     }
