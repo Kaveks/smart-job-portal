@@ -39,6 +39,14 @@ public class CompanyServiceImpl implements CompanyService {
                     "Company owner is required"
             );
         }
+        if(companyRepository.existsByOwnerId(ownerId)){
+            if(companyRepository.existsByName(request.getName()) || companyRepository.existsByRegNumber(request.getRegNumber())){
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "You already have a company ( " +request.getName() + ", " + request.getRegNumber()+ " registered.)"
+                );
+            }
+        }
 
         Company company = new Company();
         companyMapper.toCompany(request,company);
@@ -74,6 +82,12 @@ public class CompanyServiceImpl implements CompanyService {
 
         boolean nameChanged = request.getName() != null
                 && !company.getName().equals(request.getName());
+        if( nameChanged && companyRepository.existsByName(request.getName())){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A company named:"+ request.getName() + " exists!"
+            );
+        }
 
         if (request.getRegNumber() != null) {
             validateRegistrationNumber(request.getRegNumber(), id);
@@ -129,7 +143,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .toList();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<CompanyResponse> companyList(
@@ -137,45 +150,11 @@ public class CompanyServiceImpl implements CompanyService {
             IndustryType industryType,
             CompanyStatus companyStatus
     ) {
-
-        Specification<Company> specification =
-                (root, query, criteriaBuilder) ->
-                        criteriaBuilder.and(
-                                criteriaBuilder.isTrue(root.get("active")),
-                                criteriaBuilder.isTrue(root.get("verified"))
-                        );
-
-        if (companyType != null) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(
-                                    root.get("companyType"),
-                                    companyType
-                            )
-            );
-        }
-
-        if (industryType != null) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(
-                                    root.get("industryType"),
-                                    industryType
-                            )
-            );
-        }
-
-        if (companyStatus != null) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(
-                                    root.get("status"),
-                                    companyStatus
-                            )
-            );
-        }
-
-        return companyRepository.findAll(specification)
+        return companyRepository.findListedCompanies(
+                        companyType,
+                        industryType,
+                        companyStatus
+                )
                 .stream()
                 .map(companyMapper::toCompanyResponse)
                 .toList();
@@ -202,9 +181,9 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public void deleteCompany(Long id) {
+    public void deleteCompany(Long id,Long ownerId) {
         Company company = findCompanyById(id);
-
+        validateOwnership(company,ownerId);
         company.setActive(false);
 
         companyRepository.save(company);
@@ -235,6 +214,21 @@ public class CompanyServiceImpl implements CompanyService {
 
     // support methods
 
+    // Registration number validation
+    private void validateRegistrationNumber(
+            String regNumber,
+            Long companyId
+    ) {
+
+        companyRepository.findByRegNumber(regNumber)
+                .filter(existing -> !existing.getId().equals(companyId))
+                .ifPresent(existing -> {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "Company registration number already exists"
+                    );
+                });
+    }
     // Find company
     private Company findCompanyById(Long id) {
 
@@ -284,32 +278,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("(^-|-$)", "");
-    }
-    //validate slug
-    private void validateSlug(String slug, Long companyId){
-        companyRepository.findBySlug(slug)
-                .filter(existing -> !existing.getId().equals(companyId))
-                .ifPresent(existing -> {
-                    throw new ResponseStatusException(
-                            HttpStatus.CONFLICT,
-                            "Company slug already exists"
-                    );
-                });
-    }
-    // Registration number validation
-    private void validateRegistrationNumber(
-            String regNumber,
-            Long companyId
-    ) {
-
-        companyRepository.findByRegNumber(regNumber)
-                .filter(existing -> !existing.getId().equals(companyId))
-                .ifPresent(existing -> {
-                    throw new ResponseStatusException(
-                            HttpStatus.CONFLICT,
-                            "Company registration number already exists"
-                    );
-                });
     }
 
     // Ownership validation

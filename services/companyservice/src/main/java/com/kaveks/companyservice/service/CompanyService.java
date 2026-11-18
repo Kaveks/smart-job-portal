@@ -34,7 +34,7 @@ public interface CompanyService {
 
     String verifyCompany(Long id);
 
-    void deleteCompany(Long id);
+    void deleteCompany(Long id,Long ownerId);
 
     String deactivateCompany(Long id);
 
