@@ -6,6 +6,7 @@ import com.kaveks.commonlib.domain.company.IndustryType;
 import com.kaveks.commonlib.domain.user.UserRole;
 import com.kaveks.commonlib.dto.company.CompanyRequest;
 import com.kaveks.commonlib.dto.company.CompanyResponse;
+import com.kaveks.commonlib.dto.company.CompanyUpdateRequest;
 import com.kaveks.commonweb.security.annotation.AllowedRoles;
 import com.kaveks.companyservice.service.CompanyService;
 
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/companies")
+@RequestMapping("/api/v1/companies")
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyService companyService;
@@ -29,7 +30,7 @@ public class CompanyController {
     @PostMapping
     @AllowedRoles(UserRole.ROLE_EMPLOYER)
     public ResponseEntity<CompanyResponse>createCompany(
-            @Valid CompanyRequest request,
+            @Valid @RequestBody CompanyRequest request,
             @AuthenticationPrincipal Jwt jwt
     ){
         Long ownerId= getOwnerId(jwt);
@@ -68,11 +69,11 @@ public class CompanyController {
     }
 
     // Update company
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @AllowedRoles({UserRole.ROLE_EMPLOYER})
     public ResponseEntity<CompanyResponse> updateCompany(
             @PathVariable Long id,
-            @Valid @RequestBody CompanyRequest request,
+            @Valid @RequestBody CompanyUpdateRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
         Long ownerId = getOwnerId(jwt);
@@ -117,11 +118,14 @@ public class CompanyController {
 
     // Soft-delete company
     @DeleteMapping("/{id}")
-    @AllowedRoles({UserRole.ROLE_ADMIN})
+    @AllowedRoles({UserRole.ROLE_EMPLOYER,UserRole.ROLE_ADMIN})
     public ResponseEntity<Void> deleteCompany(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        companyService.deleteCompany(id);
+        Long ownerId = getOwnerId(jwt);
+
+        companyService.deleteCompany(id,ownerId);
 
         return ResponseEntity.noContent().build();
     }

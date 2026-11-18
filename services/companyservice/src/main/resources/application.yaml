@@ -44,13 +44,7 @@ app:
 
     jwt:
       issuer: smart-job-portal
-      access-token-ttl: PT15M
-
-      # Persistent RSA key storage directory
-      key-directory: ${JWT_KEY_DIRECTORY:${user.home}/.smart-job-portal/keys}
-
-      private-key-path: ${JWT_PRIVATE_KEY_PATH:${app.security.jwt.key-directory}/private.pem}
-      public-key-path: ${JWT_PUBLIC_KEY_PATH:${app.security.jwt.key-directory}/public.pem}
+      public-key-path: ${JWT_PUBLIC_KEY_PATH:${user.home}/.smart-job-portal/keys/public.pem}
 
 # Eureka Discovery Client
 eureka:

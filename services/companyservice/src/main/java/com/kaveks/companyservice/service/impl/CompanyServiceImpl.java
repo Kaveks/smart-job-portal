@@ -5,6 +5,7 @@ import com.kaveks.commonlib.domain.company.CompanyType;
 import com.kaveks.commonlib.domain.company.IndustryType;
 import com.kaveks.commonlib.dto.company.CompanyRequest;
 import com.kaveks.commonlib.dto.company.CompanyResponse;
+import com.kaveks.commonlib.dto.company.CompanyUpdateRequest;
 import com.kaveks.companyservice.mapper.CompanyMapper;
 import com.kaveks.companyservice.model.Company;
 import com.kaveks.companyservice.repository.CompanyRepository;
@@ -38,12 +39,20 @@ public class CompanyServiceImpl implements CompanyService {
                     "Company owner is required"
             );
         }
+        if(companyRepository.existsByOwnerId(ownerId)){
+            if(companyRepository.existsByName(request.getName()) || companyRepository.existsByRegNumber(request.getRegNumber())){
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "You already have a company ( " +request.getName() + ", " + request.getRegNumber()+ " registered.)"
+                );
+            }
+        }
 
         Company company = new Company();
         companyMapper.toCompany(request,company);
 
         company.setOwnerId(ownerId);
-        company.setSlug(generateUniqueSlug(request.getSlug(), request.getName()));
+        company.setSlug(generateUniqueSlug(request.getName()));
         company.setStatus(CompanyStatus.PENDING);
         company.setVerified(false);
         company.setActive(true);
@@ -52,6 +61,49 @@ public class CompanyServiceImpl implements CompanyService {
 
         return companyMapper.toCompanyResponse(savedCompany);
     }
+
+    @Override
+    @Transactional
+    public CompanyResponse updateCompany(
+            Long id,
+            Long ownerId,
+            CompanyUpdateRequest request
+    ) {
+        Company company = findCompanyById(id);
+
+        validateOwnership(company, ownerId);
+
+        if (!Boolean.TRUE.equals(company.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Company not found"
+            );
+        }
+
+        boolean nameChanged = request.getName() != null
+                && !company.getName().equals(request.getName());
+        if( nameChanged && companyRepository.existsByName(request.getName())){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A company named:"+ request.getName() + " exists!"
+            );
+        }
+
+        if (request.getRegNumber() != null) {
+            validateRegistrationNumber(request.getRegNumber(), id);
+        }
+
+        companyMapper.updateCompany(request, company);
+
+        if (nameChanged) {
+            company.setSlug(generateUniqueSlug(company.getName()));
+        }
+
+        Company updatedCompany = companyRepository.save(company);
+
+        return companyMapper.toCompanyResponse(updatedCompany);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public CompanyResponse getCompanyById(Long id) {
@@ -91,7 +143,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .toList();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<CompanyResponse> companyList(
@@ -99,80 +150,16 @@ public class CompanyServiceImpl implements CompanyService {
             IndustryType industryType,
             CompanyStatus companyStatus
     ) {
-
-        Specification<Company> specification =
-                (root, query, criteriaBuilder) ->
-                        criteriaBuilder.and(
-                                criteriaBuilder.isTrue(root.get("active")),
-                                criteriaBuilder.isTrue(root.get("verified"))
-                        );
-
-        if (companyType != null) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(
-                                    root.get("companyType"),
-                                    companyType
-                            )
-            );
-        }
-
-        if (industryType != null) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(
-                                    root.get("industryType"),
-                                    industryType
-                            )
-            );
-        }
-
-        if (companyStatus != null) {
-            specification = specification.and(
-                    (root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(
-                                    root.get("status"),
-                                    companyStatus
-                            )
-            );
-        }
-
-        return companyRepository.findAll(specification)
+        return companyRepository.findListedCompanies(
+                        companyType,
+                        industryType,
+                        companyStatus
+                )
                 .stream()
                 .map(companyMapper::toCompanyResponse)
                 .toList();
     }
 
-    @Override
-    @Transactional
-    public CompanyResponse updateCompany(Long id, Long ownerId, CompanyRequest request) {
-        Company company = findCompanyById(id);
-
-        validateOwnership(company, ownerId);
-
-        if (!Boolean.TRUE.equals(company.getActive())) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Company not found"
-            );
-        }
-
-        String requestedSlug = StringUtils.hasText(request.getSlug())
-                ? request.getSlug()
-                : company.getSlug();
-
-        String slug = slugify(requestedSlug);
-
-        validateSlug(slug, id);
-        validateRegistrationNumber(request.getRegNumber(), id);
-
-        companyMapper.toCompany(request, company);
-        company.setSlug(slug);
-
-        Company updatedCompany = companyRepository.save(company);
-
-        return companyMapper.toCompanyResponse(updatedCompany);
-    }
 
     @Override
     public String verifyCompany(Long id) {
@@ -194,9 +181,9 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public void deleteCompany(Long id) {
+    public void deleteCompany(Long id,Long ownerId) {
         Company company = findCompanyById(id);
-
+        validateOwnership(company,ownerId);
         company.setActive(false);
 
         companyRepository.save(company);
@@ -227,60 +214,6 @@ public class CompanyServiceImpl implements CompanyService {
 
     // support methods
 
-    // Find company
-    private Company findCompanyById(Long id) {
-
-        return companyRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Company not found"
-                ));
-    }
-
-    private String generateUniqueSlug(String requestSlug, String companyName){
-        String baseSlug=slugify(
-                StringUtils.hasText(requestSlug)? requestSlug : companyName
-        );
-        if (!StringUtils.hasText(baseSlug)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A valid company name or slug is required"
-            );
-        }
-        String slug=baseSlug;
-        int suffix=1;
-        while(companyRepository.existsBySlug(slug)){
-            String suffixText = "-" + suffix++;
-            int maxBaseLength = 180 - suffixText.length();
-
-            slug=baseSlug.substring(0, Math.min(baseSlug.length(),maxBaseLength)) + suffixText;
-        }
-        return slug;
-
-    }
-    // Normalize slug
-    private String slugify(String value) {
-
-        if (!StringUtils.hasText(value)) {
-            return "";
-        }
-
-        return value.trim()
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-    }
-    //validate slug
-    private void validateSlug(String slug, Long companyId){
-        companyRepository.findBySlug(slug)
-                .filter(existing -> !existing.getId().equals(companyId))
-                .ifPresent(existing -> {
-                    throw new ResponseStatusException(
-                            HttpStatus.CONFLICT,
-                            "Company slug already exists"
-                    );
-                });
-    }
     // Registration number validation
     private void validateRegistrationNumber(
             String regNumber,
@@ -295,6 +228,56 @@ public class CompanyServiceImpl implements CompanyService {
                             "Company registration number already exists"
                     );
                 });
+    }
+    // Find company
+    private Company findCompanyById(Long id) {
+
+        return companyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Company not found"
+                ));
+    }
+
+    private String generateUniqueSlug(String companyName) {
+
+        String baseSlug = slugify(companyName);
+
+        if (!StringUtils.hasText(baseSlug)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A valid company name is required to generate a slug"
+            );
+        }
+
+        String slug = baseSlug;
+        int suffix = 1;
+
+        while (companyRepository.existsBySlug(slug)) {
+
+            String suffixText = "-" + suffix++;
+
+            int maxBaseLength = 180 - suffixText.length();
+
+            slug = baseSlug.substring(
+                    0,
+                    Math.min(baseSlug.length(), maxBaseLength)
+            ) + suffixText;
+        }
+
+        return slug;
+    }
+    // Normalize slug
+    private String slugify(String value) {
+
+        if (!StringUtils.hasText(value)) {
+            return "";
+        }
+
+        return value.trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
     }
 
     // Ownership validation

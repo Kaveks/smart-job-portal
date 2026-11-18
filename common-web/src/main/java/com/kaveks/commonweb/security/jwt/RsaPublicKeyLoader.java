@@ -1,7 +1,4 @@
-
 package com.kaveks.commonweb.security.jwt;
-
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,7 +9,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-@Component
 public class RsaPublicKeyLoader {
 
     public RSAPublicKey load(
