@@ -110,7 +110,7 @@ public class CommonSecurityAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(JwtDecoder.class)
+    //@ConditionalOnBean(JwtDecoder.class)
     @ConditionalOnMissingBean(SecurityFilterChain.class)
     public SecurityFilterChain commonSecurityFilterChain(
             HttpSecurity http,
@@ -147,7 +147,6 @@ public class CommonSecurityAutoConfiguration {
                                 )
                         )
                 );
-
         return http.build();
     }
 

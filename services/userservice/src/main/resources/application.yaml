@@ -75,3 +75,4 @@ logging:
     root: INFO
     com.kaveks.userservice: INFO
     org.springframework.security: INFO
+    #org.springframework.security: DEBUG
