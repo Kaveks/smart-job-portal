@@ -15,7 +15,7 @@ spring:
 
   # PostgreSQL Database Configuration
   datasource:
-    url: ${COMPANY_DB_URL:jdbc:postgresql://localhost:5432/company_service_db}
+    url: ${COMPANY_DB_URL:jdbc:postgresql://localhost:5432/smart_job_company}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
