@@ -15,7 +15,7 @@ spring:
 
   # PostgreSQL Database Configuration
   datasource:
-    url: ${USER_DB_URL:jdbc:postgresql://localhost:5432/user_service_db}
+    url: ${USER_DB_URL:jdbc:postgresql://localhost:5432/smart_job_user}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -75,3 +75,4 @@ logging:
     root: INFO
     com.kaveks.userservice: INFO
     org.springframework.security: INFO
+    #org.springframework.security: DEBUG

@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 import java.net.URI;
@@ -103,65 +104,76 @@ public class GlobalExceptionHandler {
         Throwable cause = exception;
 
         while (cause != null) {
-
             // Unsupported JSON property
-            if (cause instanceof UnrecognizedPropertyException unknownProperty) {
+            switch (cause) {
+                case UnrecognizedPropertyException unknownProperty -> {
 
-                String field = unknownProperty.getPropertyName();
+                    String field = unknownProperty.getPropertyName();
 
-                return buildInvalidBodyResponse(
-                        request,
-                        field,
-                        "The field '" + field
-                                + "' is not supported in this request."
-                );
-            }
-
-            // Invalid JSON value, including invalid enum values
-            if (cause instanceof InvalidFormatException invalidFormat) {
-
-                String field = getFieldPath(invalidFormat);
-
-                Class<?> targetType = invalidFormat.getTargetType();
-
-                String detail;
-
-                if (targetType != null && targetType.isEnum()) {
-
-                    String acceptedValues = Arrays.stream(targetType.getEnumConstants())
-                            .map(Object::toString)
-                            .collect(Collectors.joining(", "));
-
-                    detail = String.format(
-                            "Invalid value for field '%s'. Accepted values are: %s.",
+                    return buildInvalidBodyResponse(
+                            request,
                             field,
-                            acceptedValues
-                    );
-
-                } else {
-
-                    String expectedType = targetType == null
-                            ? "the expected data type"
-                            : targetType.getSimpleName();
-
-                    detail = String.format(
-                            "Invalid value for field '%s'. Expected type: %s.",
-                            field,
-                            expectedType
+                            "The field '" + field
+                                    + "' is not supported in this request."
                     );
                 }
 
-                return buildInvalidBodyResponse(
-                        request,
-                        field,
-                        detail
-                );
+
+                // Invalid JSON value, including invalid enum values
+                case InvalidFormatException invalidFormat -> {
+
+                    String field = getFieldPath(invalidFormat);
+                    Class<?> targetType = invalidFormat.getTargetType();
+
+                    String detail;
+
+                    if (targetType != null && targetType.isEnum()) {
+
+                        String acceptedValues = Arrays.stream(targetType.getEnumConstants())
+                                .map(Object::toString)
+                                .collect(Collectors.joining(", "));
+
+                        detail = String.format(
+                                "Invalid value for field '%s'. Accepted values are: %s.",
+                                field,
+                                acceptedValues
+                        );
+
+                    } else {
+
+                        String expectedType = targetType == null
+                                ? "the expected data type"
+                                : targetType.getSimpleName();
+
+                        detail = String.format(
+                                "Invalid value for field '%s'. Expected type: %s.",
+                                field,
+                                expectedType
+                        );
+                    }
+
+                    return buildInvalidBodyResponse(request, field, detail);
+                }
+
+
+                // Other mismatched input, such as missing or incorrectly structured values
+                case MismatchedInputException mismatchedInput -> {
+
+                    String field = getFieldPath(mismatchedInput);
+
+                    return buildInvalidBodyResponse(
+                            request,
+                            field,
+                            "Invalid or missing value for field '" + field + "'."
+                    );
+                }
+                default -> {
+                }
             }
 
             cause = cause.getCause();
         }
 
-        // Malformed JSON, missing body or another unreadable request
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 createProblem(
@@ -174,7 +186,7 @@ public class GlobalExceptionHandler {
     }
 
     // Extracts the nested JSON field path
-    private String getFieldPath(InvalidFormatException exception) {
+    private String getFieldPath(MismatchedInputException exception) {
 
         String field = exception.getPath()
                 .stream()

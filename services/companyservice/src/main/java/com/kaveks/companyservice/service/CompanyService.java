@@ -33,10 +33,12 @@ public interface CompanyService {
     );
 
     String verifyCompany(Long id);
+    void verifyCompanyEligibility(Long companyId);
 
     void deleteCompany(Long id,Long ownerId);
 
     String deactivateCompany(Long id);
 
     String suspendCompany(Long id);
+    void verifyCompanyOwnership(Long companyId, Long ownerId);
 }

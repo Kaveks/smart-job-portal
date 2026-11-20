@@ -44,7 +44,7 @@ public class CompanyController {
             @RequestParam(required = false)CompanyType type,
             @RequestParam(required = false)IndustryType industry,
             @RequestParam(required = false)CompanyStatus status
-            ){
+    ){
         return ResponseEntity.ok(
                 companyService.companyList(type,industry,status)
         );
@@ -81,6 +81,27 @@ public class CompanyController {
         return ResponseEntity.ok(
                 companyService.updateCompany(id, ownerId, request)
         );
+    }
+
+    @GetMapping("/{id}/ownership")
+    @AllowedRoles(UserRole.ROLE_EMPLOYER)
+    public ResponseEntity<Void> verifyCompanyOwnership(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        Long ownerId = getOwnerId(jwt);
+
+        companyService.verifyCompanyOwnership(id, ownerId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/eligibility")
+    public ResponseEntity<Void> verifyCompanyEligibility(
+            @PathVariable Long id
+    ) {
+        companyService.verifyCompanyEligibility(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Verify company

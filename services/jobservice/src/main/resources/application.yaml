@@ -1,0 +1,74 @@
+
+# Application Configuration
+
+# Server Configuration
+server:
+  port: ${JOB_SERVICE_PORT:8083}
+
+spring:
+  application:
+    name: jobservice
+
+  cloud:
+    config:
+      enabled: false
+
+  # PostgreSQL Database Configuration
+  datasource:
+    url: ${JOB_DB_URL:jdbc:postgresql://localhost:5432/smart_job_job}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  #jackson serializer
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+  # JPA / Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# JWT Security Configuration
+app:
+  services:
+    company:
+      base-url: ${COMPANY_SERVICE_URL:http://localhost:8082}
+  security:
+    public-endpoints:
+      - /api/v1/auth/signup
+      - /api/v1/auth/login
+
+    jwt:
+      issuer: smart-job-portal
+      public-key-path: ${JWT_PUBLIC_KEY_PATH:${user.home}/.smart-job-portal/keys/public.pem}
+
+# Eureka Discovery Client
+eureka:
+  client:
+    enabled: false
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.kaveks.jobservice: INFO
+    org.springframework.security: INFO
