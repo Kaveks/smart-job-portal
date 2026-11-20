@@ -1,0 +1,20 @@
+package com.kaveks.commonlib.domain.job;
+
+public enum JobCategory {
+    SOFTWARE_DEVELOPMENT,
+    INFORMATION_TECHNOLOGY,
+    ENGINEERING,
+    FINANCE,
+    ACCOUNTING,
+    MARKETING,
+    SALES,
+    HUMAN_RESOURCES,
+    CUSTOMER_SERVICE,
+    ADMINISTRATION,
+    DESIGN,
+    EDUCATION,
+    HEALTHCARE,
+    OPERATIONS,
+    LEGAL,
+    OTHER
+}

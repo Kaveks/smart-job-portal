@@ -3,7 +3,7 @@
 
 # Server Configuration
 server:
-  port: ${JOB_SERVICE_PORT:8082}
+  port: ${JOB_SERVICE_PORT:8083}
 
 spring:
   application:
@@ -15,7 +15,7 @@ spring:
 
   # PostgreSQL Database Configuration
   datasource:
-    url: ${JOB_DB_URL:jdbc:postgresql://localhost:5432/job_service_db}
+    url: ${JOB_DB_URL:jdbc:postgresql://localhost:5432/smart_job_job}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -37,6 +37,9 @@ spring:
 
 # JWT Security Configuration
 app:
+  services:
+    company:
+      base-url: ${COMPANY_SERVICE_URL:http://localhost:8082}
   security:
     public-endpoints:
       - /api/v1/auth/signup
