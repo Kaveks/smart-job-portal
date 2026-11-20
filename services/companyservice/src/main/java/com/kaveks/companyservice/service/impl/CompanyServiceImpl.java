@@ -159,6 +159,52 @@ public class CompanyServiceImpl implements CompanyService {
                 .map(companyMapper::toCompanyResponse)
                 .toList();
     }
+    // internal use
+
+    @Override
+    @Transactional(readOnly = true)
+    public void verifyCompanyOwnership(Long companyId, Long ownerId) {
+
+        if (ownerId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Company owner is required"
+            );
+        }
+
+        Company company = findCompanyById(companyId);
+
+        if (!Boolean.TRUE.equals(company.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Company not found"
+            );
+        }
+
+        validateOwnership(company, ownerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void verifyCompanyEligibility(Long companyId) {
+        Company company = findCompanyById(companyId);
+
+        if (!Boolean.TRUE.equals(company.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Company not found"
+            );
+        }
+
+        if (!Boolean.TRUE.equals(company.getVerified())
+                || company.getStatus() != CompanyStatus.ACTIVE) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Company is not eligible to publish jobs"
+            );
+        }
+    }
+
 
 
     @Override
