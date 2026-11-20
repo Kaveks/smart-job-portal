@@ -184,7 +184,7 @@ public class GlobalExceptionHandler {
                 )
         );
     }
-    
+
     // Extracts the nested JSON field path
     private String getFieldPath(MismatchedInputException exception) {
 
