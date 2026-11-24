@@ -1,7 +1,9 @@
 package com.kaveks.jobservice.controller;
 
+import com.kaveks.commonlib.domain.job.ExperienceLevel;
 import com.kaveks.commonlib.domain.job.JobCategory;
 import com.kaveks.commonlib.domain.job.JobStatus;
+import com.kaveks.commonlib.domain.job.WorkMode;
 import com.kaveks.commonlib.domain.user.UserRole;
 import com.kaveks.commonlib.dto.job.JobRequest;
 import com.kaveks.commonlib.dto.job.JobResponse;
@@ -18,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/jobs")
@@ -40,10 +44,28 @@ public class JobController {
     public ResponseEntity<Page<JobResponse>> searchJobs(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) JobCategory category,
+            @RequestParam(required = false) ExperienceLevel experienceLevel,
+            @RequestParam(required = false) WorkMode workMode,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String county,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) BigDecimal minSalary,
+            @RequestParam(required = false) BigDecimal maxSalary,
             Pageable pageable
     ) {
         return ResponseEntity.ok(
-                jobService.searchJobs(keyword, category, pageable)
+                jobService.searchJobs(
+                        keyword,
+                        category,
+                        experienceLevel,
+                        workMode,
+                        city,
+                        county,
+                        country,
+                        minSalary,
+                        maxSalary,
+                        pageable
+                )
         );
     }
 

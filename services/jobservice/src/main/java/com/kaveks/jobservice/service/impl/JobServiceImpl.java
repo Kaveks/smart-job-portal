@@ -1,7 +1,9 @@
 package com.kaveks.jobservice.service.impl;
 
+import com.kaveks.commonlib.domain.job.ExperienceLevel;
 import com.kaveks.commonlib.domain.job.JobCategory;
 import com.kaveks.commonlib.domain.job.JobStatus;
+import com.kaveks.commonlib.domain.job.WorkMode;
 import com.kaveks.commonlib.dto.job.JobRequest;
 import com.kaveks.commonlib.dto.job.JobResponse;
 import com.kaveks.commonlib.dto.job.JobUpdateRequest;
@@ -10,6 +12,7 @@ import com.kaveks.jobservice.mapper.JobMapper;
 import com.kaveks.jobservice.model.Job;
 import com.kaveks.jobservice.repository.JobRepository;
 import com.kaveks.jobservice.service.JobService;
+import com.kaveks.jobservice.specification.JobSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.concurrent.Callable;
 
 
 @Service
@@ -51,7 +57,7 @@ public class JobServiceImpl implements JobService {
         // Persist the job.
         Job savedJob = jobRepository.save(job);
 
-        return jobMapper.toResponse(savedJob);
+        return jobMapper.toJobResponse(savedJob);
     }
 
 
@@ -67,7 +73,7 @@ public class JobServiceImpl implements JobService {
             );
         }
 
-        return jobMapper.toResponse(job);
+        return jobMapper.toJobResponse(job);
     }
 
     @Override
@@ -76,33 +82,47 @@ public class JobServiceImpl implements JobService {
             JobCategory category,
             Pageable pageable
     ) {
-        return jobRepository.searchJobs(
-                        "",
-                        category,
-                        JobStatus.OPEN,
-                        pageable
-                )
-                .map(jobMapper::toResponse);
+        Page<Job> jobs = category == null
+                ? jobRepository.findByStatus(JobStatus.OPEN, pageable)
+                : jobRepository.findByStatusAndCategory(
+                JobStatus.OPEN,
+                category,
+                pageable
+        );
+
+        return jobs.map(jobMapper::toJobResponse);
     }
+
 
     @Override
     @Transactional(readOnly = true)
     public Page<JobResponse> searchJobs(
             String keyword,
             JobCategory category,
+            ExperienceLevel experienceLevel,
+            WorkMode workMode,
+            String city,
+            String county,
+            String country,
+            BigDecimal minSalary,
+            BigDecimal maxSalary,
             Pageable pageable
     ) {
-        String searchTerm = (keyword == null || keyword.isBlank())
-                ? null
-                : keyword.trim();
-
-        return jobRepository.searchJobs(
-                        searchTerm,
-                        category,
-                        JobStatus.OPEN,
+        return jobRepository.findAll(
+                        JobSpecification.searchJobs(
+                                keyword,
+                                category,
+                                experienceLevel,
+                                workMode,
+                                city,
+                                county,
+                                country,
+                                minSalary,
+                                maxSalary
+                        ),
                         pageable
                 )
-                .map(jobMapper::toResponse);
+                .map(jobMapper::toJobResponse);
     }
 
     @Override
@@ -119,7 +139,7 @@ public class JobServiceImpl implements JobService {
                         JobStatus.OPEN,
                         pageable
                 )
-                .map(jobMapper::toResponse);
+                .map(jobMapper::toJobResponse);
     }
 
     @Override
@@ -137,7 +157,7 @@ public class JobServiceImpl implements JobService {
 
         // Retrieve all jobs belonging to the company.
         return jobRepository.findByCompanyId(companyId, pageable)
-                .map(jobMapper::toResponse);
+                .map(jobMapper::toJobResponse);
     }
 
 
@@ -164,10 +184,8 @@ public class JobServiceImpl implements JobService {
         // Persist and return the updated job.
         Job updatedJob = jobRepository.save(job);
 
-        return jobMapper.toResponse(updatedJob);
+        return jobMapper.toJobResponse(updatedJob);
     }
-
-
 
     @Override
     @Transactional
@@ -185,7 +203,7 @@ public class JobServiceImpl implements JobService {
         jobRepository.delete(job);
 
     }
-
+    // Used to publish a job or update its status transition.
     @Override
     @Transactional
     public JobResponse updateJobStatus(
@@ -202,36 +220,59 @@ public class JobServiceImpl implements JobService {
                 accessToken
         );
 
-        // Validate the requested status transition.
-        validateStatusTransition(job.getStatus(), status);
+        JobStatus currentStatus = job.getStatus();
 
-        // Prevent publishing or reopening jobs past their deadline.
-        if (status == JobStatus.OPEN
-                && job.getDeadline() != null
-                && !job.getDeadline().isAfter(LocalDate.now())) {
+        // Validate the requested status transition.
+        validateStatusTransition(currentStatus, status);
+
+        // Reject requests where the status has not changed.
+        if (currentStatus == status) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Cannot publish or reopen a job whose deadline has passed"
+                    HttpStatus.CONFLICT,
+                    "Job status is already '" + status + "'."
             );
         }
 
-        // Verify company eligibility before publishing or reopening.
+        // Publishing or reopening must happen before the deadline.
         if (status == JobStatus.OPEN) {
+
+            if (job.getDeadline() != null
+                    && !job.getDeadline().isAfter(LocalDate.now())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Cannot publish or reopen a job whose deadline has passed"
+                );
+            }
+
+            // Verify company eligibility before publishing or reopening.
             companyServiceClient.verifyCompanyEligibility(
                     job.getCompanyId(),
                     accessToken
             );
+
+            // Record the latest publication timestamp.
+            job.setPublishedAt(LocalDateTime.now());
         }
 
-        // Update only the job status.
+        // Record when the job is closed.
+        if (status == JobStatus.CLOSED) {
+            job.setClosedAt(LocalDateTime.now());
+        }
+
+        // Clear the closure timestamp when reopening a job.
+        if (currentStatus == JobStatus.CLOSED
+                && status == JobStatus.OPEN) {
+            job.setClosedAt(null);
+        }
+
+        // Apply the requested status.
         job.setStatus(status);
 
         // Persist and return the updated job.
         Job updatedJob = jobRepository.save(job);
 
-        return jobMapper.toResponse(updatedJob);
+        return jobMapper.toJobResponse(updatedJob);
     }
-
 
 
 
