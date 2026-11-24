@@ -137,7 +137,7 @@ public class JobMapper {
                         : existing == null ? null : existing.getWorkMode())
                 .build();
     }
-    public JobResponse toResponse(Job job) {
+    public JobResponse toJobResponse(Job job) {
         return new JobResponse(
                 job.getId(),
                 job.getTitle(),
@@ -155,6 +155,8 @@ public class JobMapper {
                 job.getStatus(),
                 job.getOpenings(),
                 job.getDeadline(),
+                job.getClosedAt(),
+                job.getPublishedAt(),
                 job.getExpiredAt(),
                 job.getCreatedAt(),
                 job.getUpdatedAt()

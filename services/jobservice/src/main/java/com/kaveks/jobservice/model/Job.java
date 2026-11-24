@@ -141,6 +141,11 @@ public class Job {
     private LocalDate deadline;
     private LocalDateTime expiredAt;
 
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

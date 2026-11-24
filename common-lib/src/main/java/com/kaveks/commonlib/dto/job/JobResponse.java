@@ -26,6 +26,8 @@ public record JobResponse(
         JobStatus status,
         Integer openings,
         LocalDate deadline,
+        LocalDateTime closedAt,
+        LocalDateTime publishedAt,
         LocalDateTime expiredAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
